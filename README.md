@@ -32,7 +32,21 @@ python scripts/download_data.py
 uvicorn app.main:app --reload --port 8000
 ```
 
+**Windows (PowerShell):**
+```powershell
+cd backend
+.\start_backend.ps1
+```
+
+**Windows (CMD):**
+```cmd
+cd backend
+start_backend.bat
+```
+
 Backend będzie dostępny pod adresem: `http://localhost:8000`
+
+**WAŻNE:** Backend musi być uruchomiony przed uruchomieniem frontendu!
 
 ### Frontend
 
@@ -84,6 +98,54 @@ sentiment-analysis-system/
 - TailwindCSS - stylowanie
 - Chart.js - wizualizacje
 - Axios - komunikacja z API
+
+## 🔧 Rozwiązywanie Problemów
+
+### Błąd: ERR_CONNECTION_REFUSED lub Network Error
+
+Jeśli frontend wyświetla błąd połączenia z backendem:
+
+1. **Sprawdź, czy backend jest uruchomiony:**
+   ```bash
+   # W terminalu backendu powinieneś widzieć:
+   # INFO:     Uvicorn running on http://0.0.0.0:8000
+   ```
+
+2. **Sprawdź, czy port 8000 jest wolny:**
+   ```bash
+   # Windows PowerShell
+   netstat -ano | findstr :8000
+   
+   # Jeśli port jest zajęty, zatrzymaj proces lub zmień port w uvicorn
+   ```
+
+3. **Uruchom backend ręcznie:**
+   ```bash
+   cd backend
+   # Aktywuj środowisko wirtualne
+   venv\Scripts\activate  # Windows
+   source venv/bin/activate  # Linux/Mac
+   
+   # Uruchom serwer
+   uvicorn app.main:app --reload --port 8000
+   ```
+
+4. **Sprawdź logi backendu** - powinny pojawić się informacje o:
+   - Wczytywaniu danych
+   - Statusie Ollama (jeśli używany)
+   - Gotowości serwera
+
+### Backend nie uruchamia się
+
+- Sprawdź, czy wszystkie zależności są zainstalowane: `pip install -r requirements.txt`
+- Sprawdź, czy Python 3.10+ jest zainstalowany
+- Sprawdź logi błędów w terminalu
+
+### Frontend nie łączy się z backendem
+
+- Upewnij się, że backend działa na `http://localhost:8000`
+- Sprawdź konfigurację CORS w `backend/app/main.py`
+- Sprawdź konfigurację API w `frontend/src/services/api.ts`
 
 ## 📝 Licencja
 

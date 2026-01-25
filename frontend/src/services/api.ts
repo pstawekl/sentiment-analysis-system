@@ -12,13 +12,28 @@ import type {
 } from '../types';
 
 // Konfiguracja Axios
+// Używamy względnych ścieżek, aby Vite proxy mogło przechwycić zapytania
 const apiClient = axios.create({
-  baseURL: 'http://localhost:8000',
+  baseURL: '', // Pusty baseURL - użyjemy względnych ścieżek, które przejdą przez Vite proxy
   headers: {
     'Content-Type': 'application/json',
   },
   timeout: 10000,
 });
+
+// Interceptor do obsługi błędów
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Przekazuj szczegóły błędu dalej
+    if (error.code === 'ERR_NETWORK' || error.message?.includes('Network Error')) {
+      error.message = 'Nie można połączyć się z backendem. Upewnij się, że serwer jest uruchomiony na porcie 8000.';
+    } else if (error.code === 'ECONNREFUSED' || error.message?.includes('ERR_CONNECTION_REFUSED')) {
+      error.message = 'Połączenie odrzucone. Backend nie jest uruchomiony lub nie nasłuchuje na porcie 8000.';
+    }
+    return Promise.reject(error);
+  }
+);
 
 /**
  * Pobiera statystyki ogólne z API.

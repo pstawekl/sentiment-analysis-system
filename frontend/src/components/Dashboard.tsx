@@ -2,13 +2,13 @@
  * Główny komponent dashboardu - integruje wszystkie komponenty.
  */
 
-import React, { useState, useEffect } from 'react';
-import { StatisticsComponent } from './Statistics';
-import { SentimentChart } from './SentimentChart';
-import { WordCloud } from './WordCloud';
-import { SingleAnalysis } from './SingleAnalysis';
+import React, { useEffect, useState } from 'react';
 import { getStatistics, getTopWords } from '../services/api';
-import type { Statistics, TopWords, WordCount } from '../types';
+import type { Statistics, WordCount } from '../types';
+import { SentimentChart } from './SentimentChart';
+import { SingleAnalysis } from './SingleAnalysis';
+import { StatisticsComponent } from './Statistics';
+import { WordCloud } from './WordCloud';
 
 export const Dashboard: React.FC = () => {
   const [statistics, setStatistics] = useState<Statistics | null>(null);
@@ -34,7 +34,17 @@ export const Dashboard: React.FC = () => {
       setStatistics(stats);
       setTopWords(words.words);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Błąd podczas ładowania danych');
+      let errorMessage = 'Błąd podczas ładowania danych';
+
+      if (err.code === 'ERR_NETWORK' || err.message?.includes('Network Error') || err.message?.includes('ERR_CONNECTION_REFUSED')) {
+        errorMessage = 'Nie można połączyć się z backendem. Upewnij się, że backend jest uruchomiony na porcie 8000.';
+      } else if (err.response?.data?.detail) {
+        errorMessage = err.response.data.detail;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+
+      setError(errorMessage);
       console.error('Błąd ładowania danych:', err);
     } finally {
       setLoading(false);
@@ -93,7 +103,7 @@ export const Dashboard: React.FC = () => {
 
         {/* Stopka */}
         <div className="text-center text-sm text-gray-500 mt-8">
-          System Analizy Sentymentu - Projekt Akademicki
+          Autorzy: Jakub Stawski, Bartosz Siembor
         </div>
       </div>
     </div>

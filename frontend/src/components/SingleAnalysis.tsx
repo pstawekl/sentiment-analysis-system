@@ -27,7 +27,17 @@ export const SingleAnalysis: React.FC = () => {
       const analysisResult = await analyzeSingle(reviewText);
       setResult(analysisResult);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Błąd podczas analizy opinii');
+      let errorMessage = 'Błąd podczas analizy opinii';
+      
+      if (err.code === 'ERR_NETWORK' || err.message?.includes('Network Error') || err.message?.includes('ERR_CONNECTION_REFUSED')) {
+        errorMessage = 'Nie można połączyć się z backendem. Upewnij się, że backend jest uruchomiony na porcie 8000.';
+      } else if (err.response?.data?.detail) {
+        errorMessage = err.response.data.detail;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
       console.error('Błąd analizy:', err);
     } finally {
       setLoading(false);
