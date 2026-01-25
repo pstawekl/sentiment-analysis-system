@@ -1,0 +1,52 @@
+review_id,review_text,rating,sentiment
+1,"This product is absolutely amazing! I love it so much. Best purchase ever.",5,positive
+2,"Excellent quality and fast shipping. Highly recommend to everyone.",5,positive
+3,"Great value for money. The product exceeded my expectations completely.",4,positive
+4,"Wonderful experience! The customer service was outstanding and helpful.",5,positive
+5,"Perfect product! Exactly as described. Very satisfied with my purchase.",5,positive
+6,"Terrible product! It broke after just one use. Very disappointed.",1,negative
+7,"Poor quality and slow shipping. Would not recommend to anyone.",2,negative
+8,"Waste of money. The product doesn't work as described at all.",1,negative
+9,"Fantastic quality! I will definitely buy from this seller again.",5,positive
+10,"Amazing product at an affordable price. Really happy with this buy.",4,positive
+11,"Horrible experience. The item arrived damaged and unusable.",1,negative
+12,"Very disappointed! The quality is much worse than expected.",2,negative
+13,"Top notch quality and excellent packaging. Exceeded all expectations.",5,positive
+14,"Outstanding product! The quality is superb and delivery was quick.",5,positive
+15,"Love this product! It's exactly what I was looking for. Highly recommended.",5,positive
+16,"Bad product! It stopped working after a few days. Do not buy.",1,negative
+17,"Not worth the money. Poor quality and terrible customer service.",2,negative
+18,"Great product with excellent features. Worth every penny spent.",4,positive
+19,"Excellent! The product works perfectly and looks beautiful.",5,positive
+20,"Very satisfied! Fast delivery and product is exactly as advertised.",4,positive
+21,"Awful product! It doesn't match the description at all.",1,negative
+22,"Extremely disappointed. The item was broken when it arrived.",1,negative
+23,"Amazing quality! This is a must-have item. Completely satisfied.",5,positive
+24,"Perfect! Great value for money and excellent customer service.",5,positive
+25,"Terrible quality! I regret buying this product completely.",1,negative
+26,"This product is absolutely amazing! I love it so much. Best purchase ever.",5,positive
+27,"Poor value for money. The product is cheaply made and unreliable.",2,negative
+28,"Bad experience overall. The product failed to meet expectations.",2,negative
+29,"Excellent quality and fast shipping. Highly recommend to everyone.",5,positive
+30,"Great value for money. The product exceeded my expectations completely.",4,positive
+31,"Very poor quality. I would not recommend this to anyone.",1,negative
+32,"Disappointed with the purchase. The product is defective.",2,negative
+33,"Wonderful experience! The customer service was outstanding and helpful.",5,positive
+34,"Perfect product! Exactly as described. Very satisfied with my purchase.",5,positive
+35,"Worst product ever! Complete waste of money and time.",1,negative
+36,"Fantastic quality! I will definitely buy from this seller again.",5,positive
+37,"This product is absolutely amazing! I love it so much. Best purchase ever.",5,positive
+38,"Excellent quality and fast shipping. Highly recommend to everyone.",5,positive
+39,"Terrible product! It broke after just one use. Very disappointed.",1,negative
+40,"Poor quality and slow shipping. Would not recommend to anyone.",2,negative
+41,"Great value for money. The product exceeded my expectations completely.",4,positive
+42,"Waste of money. The product doesn't work as described at all.",1,negative
+43,"Wonderful experience! The customer service was outstanding and helpful.",5,positive
+44,"Amazing product at an affordable price. Really happy with this buy.",4,positive
+45,"Horrible experience. The item arrived damaged and unusable.",1,negative
+46,"Very disappointed! The quality is much worse than expected.",2,negative
+47,"Perfect product! Exactly as described. Very satisfied with my purchase.",5,positive
+48,"Top notch quality and excellent packaging. Exceeded all expectations.",5,positive
+49,"Bad product! It stopped working after a few days. Do not buy.",1,negative
+50,"Outstanding product! The quality is superb and delivery was quick.",5,positive
+
