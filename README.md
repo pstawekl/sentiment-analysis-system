@@ -64,9 +64,17 @@ Frontend będzie dostępny pod adresem: `http://localhost:5173`
 sentiment-analysis-system/
 ├── backend/          # FastAPI backend
 ├── frontend/         # React frontend
-├── docs/            # Dokumentacja (raport akademicki)
-└── README.md        # Ten plik
+├── docs/             # Dokumentacja
+│   ├── DOKUMENTACJA.md   # Pełna dokumentacja (PL)
+│   ├── API.md            # Referencja API
+│   └── ARCHITEKTURA.md   # Architektura techniczna
+└── README.md         # Ten plik
 ```
+
+**Dokumentacja:** szczegółowa dokumentacja znajduje się w folderze [docs/](docs/):
+- [DOKUMENTACJA.md](docs/DOKUMENTACJA.md) – pełna dokumentacja (instalacja, architektura, funkcje, konfiguracja, rozwiązywanie problemów)
+- [API.md](docs/API.md) – referencja endpointów REST
+- [ARCHITEKTURA.md](docs/ARCHITEKTURA.md) – opis modułów backendu i frontendu
 
 ## 🔌 API Endpoints
 
