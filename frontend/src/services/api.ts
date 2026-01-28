@@ -5,10 +5,11 @@
 
 import axios from 'axios';
 import type {
-  Statistics,
-  TopWords,
-  SentimentAnalysis,
-  AveragePolarity,
+    AveragePolarity,
+    ReviewItem,
+    SentimentAnalysis,
+    Statistics,
+    TopWords,
 } from '../types';
 
 // Konfiguracja Axios
@@ -34,6 +35,14 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+/**
+ * Pobiera listę wszystkich opinii z analizą (do gridu).
+ */
+export const getReviews = async (): Promise<ReviewItem[]> => {
+  const response = await apiClient.get<{ reviews: ReviewItem[] }>('/api/reviews');
+  return response.data.reviews;
+};
 
 /**
  * Pobiera statystyki ogólne z API.
@@ -77,5 +86,17 @@ export const analyzeSingle = async (reviewText: string): Promise<SentimentAnalys
 export const healthCheck = async (): Promise<{ status: string }> => {
   const response = await apiClient.get<{ status: string }>('/api/health');
   return response.data;
+};
+
+/**
+ * Pobiera raport końcowy w formacie PDF (wszystkie opinie i analiza).
+ * Zwraca Blob do pobrania pliku po stronie klienta.
+ */
+export const getReportPdf = async (): Promise<Blob> => {
+  const response = await apiClient.get('/api/report/pdf', {
+    responseType: 'blob',
+    timeout: 30000,
+  });
+  return response.data as Blob;
 };
 

@@ -64,3 +64,8 @@ backend/data/*.csv
 !backend/data/.gitkeep
 backend/__pycache__/
 
+
+*.zip
+
+pandas/
+podstawy_python/

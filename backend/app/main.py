@@ -7,15 +7,18 @@ from typing import Optional
 import pandas as pd
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
 
 from .analysis.ollama_client import ollama_client
 from .analysis.sentiment import (analyze_batch, analyze_batch_async,
                                  analyze_sentiment, analyze_sentiment_async,
                                  classify_sentiment, get_average_polarity,
                                  get_top_words, perform_eda)
-from .data.loader import clean_data, load_data
+from .data.loader import append_review, clean_data, load_data
 from .models import (AveragePolarityResponse, HealthResponse, ReviewInput,
-                     SentimentResponse, StatisticsResponse, TopWordsResponse)
+                     ReviewItem, ReviewsListResponse, SentimentResponse,
+                     StatisticsResponse, TopWordsResponse)
+from .reports.pdf_report import build_report_pdf
 
 # Inicjalizacja FastAPI
 app = FastAPI(
@@ -186,39 +189,122 @@ async def get_top_words_endpoint(limit: int = Query(20, ge=1, le=100, descriptio
     )
 
 
+@app.get("/api/reviews", response_model=ReviewsListResponse)
+async def get_reviews():
+    """
+    Zwraca listę wszystkich opinii z analizą sentymentu (do wyświetlenia w gridzie).
+    """
+    global cached_df, eda_stats
+    if cached_df is None or eda_stats is None:
+        if not await load_and_analyze_data():
+            return ReviewsListResponse(reviews=[])
+    reviews = []
+    for i, row in cached_df.iterrows():
+        item = ReviewItem(
+            index=int(i) + 1,
+            review_id=int(row["review_id"]) if "review_id" in cached_df.columns and pd.notna(
+                row.get("review_id")) else None,
+            review_text=str(row["review_text"]),
+            polarity=float(row["polarity"]),
+            sentiment_label=str(row["sentiment_label"]),
+            word_count=int(row["word_count"]) if "word_count" in cached_df.columns else len(
+                str(row["review_text"]).split()),
+            review_length=int(row["review_length"]) if "review_length" in cached_df.columns else len(
+                str(row["review_text"])),
+        )
+        reviews.append(item)
+    return ReviewsListResponse(reviews=reviews)
+
+
 @app.post("/api/analyze", response_model=SentimentResponse)
 async def analyze_single_review(review_input: ReviewInput):
     """
-    Analizuje pojedynczą opinię i zwraca wynik sentymentu.
-    Używa LLaMA przez Ollama dla analizy.
-
-    Args:
-        review_input: Model z tekstem opinii
+    Analizuje pojedynczą opinię, zwraca wynik sentymentu oraz zapisuje opinię
+    do dataset.csv i aktualizuje cache (wykresy i statystyki).
     """
+    global cached_df, eda_stats
     if not review_input.review_text or len(review_input.review_text.strip()) == 0:
         raise HTTPException(
             status_code=400, detail="Tekst opinii nie może być pusty")
 
     try:
-        # Analiza sentymentu przy użyciu async Ollama
         sentiment_result = await analyze_sentiment_async(review_input.review_text, use_cache=True)
         polarity = sentiment_result.get("polarity", 0.0)
         sentiment_label = sentiment_result.get(
             "label", classify_sentiment(polarity))
     except Exception as e:
-        # Fallback do synchronicznej wersji
         print(f"Błąd podczas async analizy, używam fallback: {e}")
         sentiment_result = analyze_sentiment(review_input.review_text)
         polarity = sentiment_result["polarity"]
         sentiment_label = classify_sentiment(polarity)
 
-    # Liczba słów
     word_count = len(review_input.review_text.split())
+    review_length = len(review_input.review_text.strip())
+
+    # Zapis do dataset.csv i aktualizacja cache
+    if cached_df is not None:
+        try:
+            next_id = 1
+            if "review_id" in cached_df.columns:
+                next_id = int(cached_df["review_id"].max()) + 1
+            append_review(
+                review_id=next_id,
+                review_text=review_input.review_text.strip(),
+                sentiment=sentiment_label,
+                rating=0,
+            )
+            new_row = {
+                "review_text": review_input.review_text.strip(),
+                "polarity": polarity,
+                "sentiment_label": sentiment_label,
+                "word_count": word_count,
+                "review_length": review_length,
+            }
+            if "review_id" in cached_df.columns:
+                new_row["review_id"] = next_id
+            if "rating" in cached_df.columns:
+                new_row["rating"] = 0
+            cached_df = pd.concat(
+                [cached_df, pd.DataFrame([new_row])],
+                ignore_index=True,
+            )
+            eda_results, cached_df = perform_eda(cached_df)
+            eda_stats = eda_results
+        except Exception as e:
+            print(f"Błąd zapisu opinii do datasetu: {e}")
 
     return SentimentResponse(
         polarity=polarity,
         sentiment_label=sentiment_label,
         word_count=word_count
+    )
+
+
+@app.get("/api/report/pdf")
+async def get_report_pdf():
+    """
+    Generuje i zwraca raport końcowy w formacie PDF.
+    Zawiera podsumowanie statystyk oraz listę wszystkich opinii z analizą sentymentu.
+    """
+    if cached_df is None or eda_stats is None:
+        if not await load_and_analyze_data():
+            raise HTTPException(
+                status_code=503,
+                detail="Dane nie zostały załadowane. Uruchom: python scripts/download_data.py"
+            )
+    try:
+        pdf_bytes = build_report_pdf(cached_df, eda_stats)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Błąd podczas generowania raportu PDF: {e}"
+        )
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": 'attachment; filename="raport_sentyment.pdf"'
+        },
     )
 
 

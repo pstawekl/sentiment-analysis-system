@@ -3,18 +3,21 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { getStatistics, getTopWords } from '../services/api';
-import type { Statistics, WordCount } from '../types';
+import { getReportPdf, getReviews, getStatistics, getTopWords } from '../services/api';
+import type { ReviewItem, Statistics, WordCount } from '../types';
+import { ReviewsGrid } from './ReviewsGrid';
 import { SentimentChart } from './SentimentChart';
 import { SingleAnalysis } from './SingleAnalysis';
 import { StatisticsComponent } from './Statistics';
-import { WordCloud } from './WordCloud';
 
 export const Dashboard: React.FC = () => {
   const [statistics, setStatistics] = useState<Statistics | null>(null);
   const [topWords, setTopWords] = useState<WordCount[]>([]);
+  const [reviews, setReviews] = useState<ReviewItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reportPdfLoading, setReportPdfLoading] = useState(false);
+  const [reportPdfError, setReportPdfError] = useState<string | null>(null);
 
   useEffect(() => {
     loadData();
@@ -25,14 +28,15 @@ export const Dashboard: React.FC = () => {
     setError(null);
 
     try {
-      // Pobierz statystyki i TOP słowa równolegle
-      const [stats, words] = await Promise.all([
+      const [stats, words, reviewsList] = await Promise.all([
         getStatistics(),
         getTopWords(30),
+        getReviews(),
       ]);
 
       setStatistics(stats);
       setTopWords(words.words);
+      setReviews(reviewsList);
     } catch (err: any) {
       let errorMessage = 'Błąd podczas ładowania danych';
 
@@ -51,6 +55,44 @@ export const Dashboard: React.FC = () => {
     }
   };
 
+  const handleDownloadReportPdf = async () => {
+    setReportPdfLoading(true);
+    setReportPdfError(null);
+    try {
+      const blob = await getReportPdf();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'raport_sentyment.pdf';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err: unknown) {
+      let errorMessage = 'Błąd podczas pobierania raportu PDF.';
+      if (err && typeof err === 'object' && 'response' in err) {
+        const axErr = err as { response?: { data?: unknown; status?: number } };
+        if (axErr.response?.data instanceof Blob) {
+          try {
+            const text = await axErr.response.data.text();
+            const json = JSON.parse(text) as { detail?: string };
+            if (json.detail) errorMessage = json.detail;
+          } catch {
+            // leave default message
+          }
+        } else if (axErr.response?.data && typeof axErr.response.data === 'object' && 'detail' in axErr.response.data) {
+          errorMessage = (axErr.response.data as { detail: string }).detail;
+        }
+      } else if (err instanceof Error && err.message) {
+        errorMessage = err.message;
+      }
+      setReportPdfError(errorMessage);
+      console.error('Błąd pobierania raportu PDF:', err);
+    } finally {
+      setReportPdfLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="container mx-auto px-4 max-w-7xl">
@@ -59,9 +101,20 @@ export const Dashboard: React.FC = () => {
           <h1 className="text-4xl font-bold text-gray-900 mb-2">
             System Analizy Sentymentu Opinii
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 mb-4">
             Dashboard do analizy i wizualizacji sentymentu opinii klientów
           </p>
+          <button
+            type="button"
+            onClick={handleDownloadReportPdf}
+            disabled={reportPdfLoading || loading}
+            className="px-5 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {reportPdfLoading ? 'Generowanie raportu...' : 'Pobierz raport PDF'}
+          </button>
+          {reportPdfError && (
+            <div className="mt-3 text-sm text-red-600">{reportPdfError}</div>
+          )}
         </div>
 
         {/* Komunikat błędu */}
@@ -88,18 +141,17 @@ export const Dashboard: React.FC = () => {
           <SentimentChart statistics={statistics} loading={loading} />
         </div>
 
-        {/* Grid z chmurą słów i analizą pojedynczą */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          {/* Chmura słów */}
-          <div>
-            <WordCloud words={topWords} loading={loading} />
-          </div>
-
-          {/* Analiza pojedyncza */}
-          <div>
-            <SingleAnalysis />
-          </div>
+        {/* Analiza pojedyncza */}
+        <div className="grid grid-cols-1 gap-8 mb-8">
+          <SingleAnalysis onAnalysisSuccess={loadData} />
         </div>
+
+        {/* Grid z opiniami i analizą */}
+        <div className="mb-8">
+          <ReviewsGrid reviews={reviews} loading={loading} />
+        </div>
+
+
 
         {/* Stopka */}
         <div className="text-center text-sm text-gray-500 mt-8">

@@ -7,3 +7,4 @@ nltk
 pydantic
 python-multipart
 ollama
+reportlab

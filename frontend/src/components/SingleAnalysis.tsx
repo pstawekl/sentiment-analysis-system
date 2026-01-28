@@ -7,7 +7,14 @@ import React, { useState } from 'react';
 import { analyzeSingle } from '../services/api';
 import type { SentimentAnalysis } from '../types';
 
-export const SingleAnalysis: React.FC = () => {
+interface SingleAnalysisProps {
+  /** Wywoływane po udanej analizie – odświeża statystyki, wykresy i grid opinii */
+  onAnalysisSuccess?: () => void;
+}
+
+export const SingleAnalysis: React.FC<SingleAnalysisProps> = ({
+  onAnalysisSuccess,
+}) => {
   const [reviewText, setReviewText] = useState('');
   const [result, setResult] = useState<SentimentAnalysis | null>(null);
   const [loading, setLoading] = useState(false);
@@ -26,9 +33,10 @@ export const SingleAnalysis: React.FC = () => {
     try {
       const analysisResult = await analyzeSingle(reviewText);
       setResult(analysisResult);
+      onAnalysisSuccess?.();
     } catch (err: any) {
       let errorMessage = 'Błąd podczas analizy opinii';
-      
+
       if (err.code === 'ERR_NETWORK' || err.message?.includes('Network Error') || err.message?.includes('ERR_CONNECTION_REFUSED')) {
         errorMessage = 'Nie można połączyć się z backendem. Upewnij się, że backend jest uruchomiony na porcie 8000.';
       } else if (err.response?.data?.detail) {
@@ -36,7 +44,7 @@ export const SingleAnalysis: React.FC = () => {
       } else if (err.message) {
         errorMessage = err.message;
       }
-      
+
       setError(errorMessage);
       console.error('Błąd analizy:', err);
     } finally {
@@ -107,7 +115,7 @@ export const SingleAnalysis: React.FC = () => {
           >
             {loading ? 'Analizowanie...' : 'Analizuj'}
           </button>
-          
+
           <button
             onClick={handleClear}
             className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
@@ -127,7 +135,7 @@ export const SingleAnalysis: React.FC = () => {
         {result && (
           <div className="mt-6 p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
             <h3 className="text-xl font-bold mb-4 text-gray-800">Wyniki Analizy</h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               {/* Polaryzacja */}
               <div className="bg-white rounded-lg p-4 shadow-sm">
@@ -142,11 +150,10 @@ export const SingleAnalysis: React.FC = () => {
               <div className="bg-white rounded-lg p-4 shadow-sm">
                 <div className="text-sm text-gray-600 mb-1">Sentyment</div>
                 <div
-                  className={`text-2xl font-bold ${
-                    result.sentiment_label === 'positive'
+                  className={`text-2xl font-bold ${result.sentiment_label === 'positive'
                       ? 'text-green-600'
                       : 'text-red-600'
-                  }`}
+                    }`}
                 >
                   {result.sentiment_label === 'positive' ? 'Pozytywny' : 'Negatywny'}
                 </div>
@@ -166,11 +173,10 @@ export const SingleAnalysis: React.FC = () => {
               <div className="text-sm text-gray-600 mb-2">Wizualizacja polaryzacji:</div>
               <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
                 <div
-                  className={`h-full rounded-full transition-all ${
-                    result.polarity >= 0
+                  className={`h-full rounded-full transition-all ${result.polarity >= 0
                       ? 'bg-gradient-to-r from-green-400 to-green-600'
                       : 'bg-gradient-to-r from-red-600 to-red-400'
-                  }`}
+                    }`}
                   style={{
                     width: `${Math.abs(result.polarity) * 100}%`,
                     marginLeft: result.polarity < 0 ? 'auto' : '0',

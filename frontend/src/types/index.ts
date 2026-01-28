@@ -33,3 +33,13 @@ export interface AveragePolarity {
   average_polarity: number;
 }
 
+export interface ReviewItem {
+  index: number;
+  review_id?: number;
+  review_text: string;
+  polarity: number;
+  sentiment_label: 'positive' | 'negative';
+  word_count: number;
+  review_length?: number;
+}
+
